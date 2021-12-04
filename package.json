@@ -17,8 +17,9 @@
   "dependencies": {
     "@uniswap/lib": "1.1.1",
     "@uniswap/v2-core": "^1.0.1",
-    "truffle-hdwallet-provider": "^1.0.17",
-    "truffle-plugin-verify": "^0.4.0"
+    "@truffle/hdwallet-provider": "1.14.0",
+    "truffle-plugin-verify": "^0.4.0",
+    "truffle": "^5.1.58"
   },
   "devDependencies": {
     "@types/chai": "^4.2.6",
