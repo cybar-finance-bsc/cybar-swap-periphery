@@ -1,13 +1,12 @@
 pragma solidity = 0.6.6;
 
-import '@uniswap/lib/contracts/libraries/TransferHelper.sol';
-
 import './interfaces/ICybarRouter02.sol';
 import './libraries/CybarLibrary.sol';
 import './libraries/SafeMath.sol';
 import './interfaces/IERC20.sol';
 import './interfaces/IWFTM.sol';
 import './interfaces/ICybarFactory.sol';
+import './libraries/TransferHelper.sol';
 
 contract CybarRouter is ICybarRouter02 {
     using SafeMath for uint;

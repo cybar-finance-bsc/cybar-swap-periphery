@@ -1,8 +1,7 @@
 pragma solidity =0.6.6;
 
-import '@uniswap/lib/contracts/libraries/TransferHelper.sol';
-
 import './libraries/CybarLibrary.sol';
+import './libraries/TransferHelper.sol';
 import './interfaces/ICybarRouter01.sol';
 import './interfaces/IERC20.sol';
 import './interfaces/IWFTM.sol';
