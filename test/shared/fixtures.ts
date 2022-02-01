@@ -4,14 +4,11 @@ import { deployContract } from 'ethereum-waffle'
 
 import { expandTo18Decimals } from './utilities'
 
-import UniswapV2Factory from '@uniswap/v2-core/build/UniswapV2Factory.json'
-import IUniswapV2Pair from '@uniswap/v2-core/build/IUniswapV2Pair.json'
+import CybarV2Factory from '../../buildPermanent/CybarFactory.json'
+import ICybarV2Pair from '../../buildPermanent/ICybarPair.json'
 
 import ERC20 from '../../build/ERC20.json'
-import WETH9 from '../../build/WETH9.json'
-import UniswapV1Exchange from '../../build/UniswapV1Exchange.json'
-import UniswapV1Factory from '../../build/UniswapV1Factory.json'
-import CybarRouter01 from '../../build/CybarRouter01.json'
+import WFTM9 from '../../build/WFTM9.json'
 import CybarMigrator from '../../build/CybarMigrator.json'
 import CybarRouter02 from '../../build/CybarRouter.json'
 import RouterEventEmitter from '../../build/RouterEventEmitter.json'
@@ -23,16 +20,12 @@ const overrides = {
 interface V2Fixture {
   token0: Contract
   token1: Contract
-  WETH: Contract
-  WETHPartner: Contract
-  factoryV1: Contract
-  factoryV2: Contract
-  router01: Contract
-  router02: Contract
-  routerEventEmitter: Contract
+  WFTM: Contract
+  WFTMPartner: Contract
+  factory: Contract
   router: Contract
+  routerEventEmitter: Contract
   migrator: Contract
-  WETHExchangeV1: Contract
   pair: Contract
   WETHPair: Contract
 }
@@ -41,19 +34,13 @@ export async function v2Fixture(provider: Web3Provider, [wallet]: Wallet[]): Pro
   // deploy tokens
   const tokenA = await deployContract(wallet, ERC20, [expandTo18Decimals(10000)])
   const tokenB = await deployContract(wallet, ERC20, [expandTo18Decimals(10000)])
-  const WETH = await deployContract(wallet, WETH9)
-  const WETHPartner = await deployContract(wallet, ERC20, [expandTo18Decimals(10000)])
+  const WFTM = await deployContract(wallet, WFTM9)
+  const WFTMPartner = await deployContract(wallet, ERC20, [expandTo18Decimals(10000)])
 
-  // deploy V1
-  const factoryV1 = await deployContract(wallet, UniswapV1Factory, [])
-  await factoryV1.initializeFactory((await deployContract(wallet, UniswapV1Exchange, [])).address)
+  // deploy
+  const factory = await deployContract(wallet, CybarV2Factory, [wallet.address])
 
-  // deploy V2
-  const factoryV2 = await deployContract(wallet, UniswapV2Factory, [wallet.address])
-
-  // deploy routers
-  const router01 = await deployContract(wallet, CybarRouter01, [factoryV2.address, WETH.address], overrides)
-  const router02 = await deployContract(wallet, CybarRouter02, [factoryV2.address, WETH.address], overrides)
+  const router = await deployContract(wallet, CybarRouter02, [factory.address, WFTM.address], overrides)
 
   // event emitter for testing
   const routerEventEmitter = await deployContract(wallet, RouterEventEmitter, [])
@@ -61,39 +48,28 @@ export async function v2Fixture(provider: Web3Provider, [wallet]: Wallet[]): Pro
   // deploy migrator
   const migrator = await deployContract(wallet, CybarMigrator, [factoryV1.address, router01.address], overrides)
 
-  // initialize V1
-  await factoryV1.createExchange(WETHPartner.address, overrides)
-  const WETHExchangeV1Address = await factoryV1.getExchange(WETHPartner.address)
-  const WETHExchangeV1 = new Contract(WETHExchangeV1Address, JSON.stringify(UniswapV1Exchange.abi), provider).connect(
-    wallet
-  )
-
-  // initialize V2
-  await factoryV2.createPair(tokenA.address, tokenB.address)
-  const pairAddress = await factoryV2.getPair(tokenA.address, tokenB.address)
-  const pair = new Contract(pairAddress, JSON.stringify(IUniswapV2Pair.abi), provider).connect(wallet)
+  // initialize
+  await factory.createPair(tokenA.address, tokenB.address)
+  const pairAddress = await factory.getPair(tokenA.address, tokenB.address)
+  const pair = new Contract(pairAddress, JSON.stringify(ICybarV2Pair.abi), provider).connect(wallet)
 
   const token0Address = await pair.token0()
   const token0 = tokenA.address === token0Address ? tokenA : tokenB
   const token1 = tokenA.address === token0Address ? tokenB : tokenA
 
-  await factoryV2.createPair(WETH.address, WETHPartner.address)
-  const WETHPairAddress = await factoryV2.getPair(WETH.address, WETHPartner.address)
-  const WETHPair = new Contract(WETHPairAddress, JSON.stringify(IUniswapV2Pair.abi), provider).connect(wallet)
+  await factory.createPair(WFTM.address, WFTMPartner.address)
+  const WETHPairAddress = await factory.getPair(WFTM.address, WFTMPartner.address)
+  const WETHPair = new Contract(WETHPairAddress, JSON.stringify(ICybarV2Pair.abi), provider).connect(wallet)
 
   return {
     token0,
     token1,
-    WETH,
-    WETHPartner,
-    factoryV1,
-    factoryV2,
-    router01,
-    router02,
-    router: router02, // the default router, 01 had a minor bug
+    WFTM,
+    WFTMPartner,
+    factory,
+    router,
     routerEventEmitter,
     migrator,
-    WETHExchangeV1,
     pair,
     WETHPair
   }
