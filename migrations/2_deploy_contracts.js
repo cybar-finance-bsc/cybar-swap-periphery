@@ -5,7 +5,7 @@ const WFTM = artifacts.require("WFTM9");
 
 module.exports = async function(deployer, network, accounts) {
     let walletAddress, cybarAddress;
-    if(network=='localDeployment'){
+    if(network==='localDeployment'){
         let initialLiquidity = "1000000000000000000000000";
         let cybarFactoryAddress = "0xb145c7F8A54BF8e624Cb86Bde100B96e3B202Ff6"; // INSERT FACTORY ADDRESS HERE
         await deployer.deploy(WFTM);
